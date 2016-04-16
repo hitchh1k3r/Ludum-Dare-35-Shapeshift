@@ -2,11 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 
+[RequireComponent(typeof(Rigidbody2D))]
 public class CharacterController : MonoBehaviour
 {
 
-  public int characterIndex = 0;
-  public CharacterShape[] shapes = new CharacterShape[] { CharacterShape.SQUARE, CharacterShape.CIRCLE, CharacterShape.TRIANGLE };
+  public CharacterShape shape = CharacterShape.SQUARE;
+  public Collider2D collider;
 
   public float extendSpeed = 5;
   public float retractSpeed = 15;
@@ -15,31 +16,50 @@ public class CharacterController : MonoBehaviour
   public float vertExtend = 0;
 
   private int lastRotateDir = 0;
+  private Rigidbody2D physics;
+  private bool hasControl;
+  private bool jumpCooler;
 
   void Awake()
   {
+    physics = GetComponent<Rigidbody2D>();
   }
 
-  void Update()
+  void LateUpdate()
   {
-    if (shapes[characterIndex] == CharacterShape.SQUARE)
+    if (shape == CharacterShape.SQUARE)
     {
       SquareUpdate();
     }
-    else if (shapes[characterIndex] == CharacterShape.TRIANGLE)
+    else if (shape == CharacterShape.TRIANGLE)
     {
       TriangleUpdate();
     }
-    if (Input.GetButtonDown("Shapeshift"))
+    else if (shape == CharacterShape.CIRCLE)
     {
-      characterIndex = (characterIndex + 1) % shapes.Length;
-      horzExtend = 0;
-      vertExtend = 0;
-      transform.localScale = new Vector2((1 + horzExtend) / (1 + vertExtend), (1 + vertExtend) / (1 + horzExtend));
+      CircleUpdate();
+    }
+    hasControl = false;
+  }
+
+  public void ControlUpdate()
+  {
+    hasControl = true;
+    if (shape == CharacterShape.SQUARE)
+    {
+      SquareControlUpdate();
+    }
+    else if (shape == CharacterShape.TRIANGLE)
+    {
+      TriangleControlUpdate();
+    }
+    else if (shape == CharacterShape.CIRCLE)
+    {
+      CircleControlUpdate();
     }
   }
 
-  private void SquareUpdate()
+  private void SquareControlUpdate()
   {
     float xDist = horzExtend;
     float yDist = vertExtend;
@@ -117,30 +137,42 @@ public class CharacterController : MonoBehaviour
     xDist -= horzExtend;
     yDist -= vertExtend;
     transform.position = transform.position + new Vector3(0.75f * xDir * xDist, 0.75f * yDir * yDist, 0);
-    transform.localScale = new Vector2((1 + horzExtend) / (1 + vertExtend), (1 + vertExtend) / (1 + horzExtend));
+    transform.localScale = new Vector3((1 + horzExtend) / (1 + vertExtend), (1 + vertExtend) / (1 + horzExtend), 1);
   }
 
-  private void TriangleUpdate()
+  private void SquareUpdate()
   {
-    transform.Rotate(new Vector3(0, 0, -Time.deltaTime * 120));
-    transform.position = transform.position + new Vector3(Time.deltaTime, 0, 0);
-    lastRotateDir = 1;
+  }
 
-    return;
-
+  private void TriangleControlUpdate()
+  {
     if (Input.GetAxisRaw("Horizontal") < -0.1)
     {
-      transform.Rotate(new Vector3(0, 0, Time.deltaTime * 120));
-      transform.position = transform.position + new Vector3(-Time.deltaTime, 0, 0);
+      float bonus = 1 + ((transform.rotation.eulerAngles.z % 120) / 120);
+      transform.Rotate(new Vector3(0, 0, Time.deltaTime * 45 * bonus * bonus));
+      transform.position = transform.position + new Vector3(-Time.deltaTime * bonus * bonus * 0.425f, 0, 0);
       lastRotateDir = -1;
     }
     else if (Input.GetAxisRaw("Horizontal") > 0.1)
     {
-      transform.Rotate(new Vector3(0, 0, -Time.deltaTime * 120));
-      transform.position = transform.position + new Vector3(Time.deltaTime, 0, 0);
+      float bonus = 2 - ((transform.rotation.eulerAngles.z % 120) / 120);
+      transform.Rotate(new Vector3(0, 0, -Time.deltaTime * 45 * bonus * bonus));
+      transform.position = transform.position + new Vector3(Time.deltaTime * bonus * bonus * 0.425f, 0, 0);
       lastRotateDir = 1;
     }
-    else
+    else if (Input.GetAxisRaw("Vertical") < -0.1)
+    {
+      transform.rotation = Quaternion.Euler(0, 0, 60);
+    }
+    else if (Input.GetAxisRaw("Vertical") > 0.1)
+    {
+      transform.rotation = Quaternion.Euler(0, 0, 0);
+    }
+  }
+
+  private void TriangleUpdate()
+  {
+    if (!hasControl || (Input.GetAxisRaw("Horizontal") >= -0.1 && Input.GetAxisRaw("Horizontal") <= 0.1))
     {
       float zAngle = transform.rotation.eulerAngles.z;
       float deltaAngle = zAngle % 60;
@@ -150,10 +182,11 @@ public class CharacterController : MonoBehaviour
       }
       else if (lastRotateDir > 0)
       {
+        float bonus = 2 - ((zAngle % 120) / 120);
         if (deltaAngle < 59)
         {
-          transform.position = transform.position + new Vector3(Time.deltaTime * 0.9f, 0, 0);
-          float amnt = Time.deltaTime * 90;
+          transform.position = transform.position + new Vector3(Time.deltaTime * bonus * bonus * 0.425f, 0, 0);
+          float amnt = Time.deltaTime * bonus * bonus * 45;
           if (amnt > deltaAngle)
           {
             amnt = deltaAngle;
@@ -162,8 +195,8 @@ public class CharacterController : MonoBehaviour
         }
         else
         {
-          transform.position = transform.position + new Vector3(-Time.deltaTime * 0.9f, 0, 0);
-          float amnt = Time.deltaTime * 90;
+          transform.position = transform.position + new Vector3(-Time.deltaTime * bonus * bonus * 0.425f, 0, 0);
+          float amnt = Time.deltaTime * bonus * bonus * 45;
           if (amnt > 60 - deltaAngle)
           {
             amnt = 60 - deltaAngle;
@@ -174,10 +207,11 @@ public class CharacterController : MonoBehaviour
       }
       else if (lastRotateDir < 0)
       {
+        float bonus = 1 + ((zAngle % 120) / 120);
         if (deltaAngle > 1)
         {
-          transform.position = transform.position + new Vector3(-Time.deltaTime * 0.9f, 0, 0);
-          float amnt = Time.deltaTime * 90;
+          transform.position = transform.position + new Vector3(-Time.deltaTime * 0.425f, 0, 0);
+          float amnt = Time.deltaTime * bonus * bonus * 45;
           if (amnt > 60 - deltaAngle)
           {
             amnt = 60 - deltaAngle;
@@ -186,8 +220,8 @@ public class CharacterController : MonoBehaviour
         }
         else
         {
-          transform.position = transform.position + new Vector3(Time.deltaTime * 0.9f, 0, 0);
-          float amnt = Time.deltaTime * 90;
+          transform.position = transform.position + new Vector3(Time.deltaTime * 0.425f, 0, 0);
+          float amnt = Time.deltaTime * bonus * bonus * 45;
           if (amnt > deltaAngle)
           {
             amnt = deltaAngle;
@@ -196,6 +230,37 @@ public class CharacterController : MonoBehaviour
         }
         transform.rotation = Quaternion.Euler(new Vector3(0, 0, zAngle));
       }
+    }
+  }
+
+  private void CircleUpdate()
+  {
+  }
+
+  private void CircleControlUpdate()
+  {
+    if (Input.GetAxisRaw("Horizontal") < -0.1 || Input.GetAxisRaw("Horizontal") > 0.1)
+    {
+      transform.position = transform.position + new Vector3(Input.GetAxisRaw("Horizontal") * Time.deltaTime * 5, 0, 0);
+    }
+    if (Input.GetAxisRaw("Vertical") > 0.1)
+    {
+      collider.enabled = false;
+      if (!jumpCooler)
+      {
+        RaycastHit2D hit = Physics2D.CircleCast(transform.position, 0.45f, Vector2.down, 0.1f);
+        if (!jumpCooler && hit.collider != null)
+        {
+          Debug.Log("NORMAL: " + hit.normal + "   JUMP: " + (5 * (hit.normal + (5 * Vector2.up)).normalized));
+          physics.AddForce(5 * (hit.normal + (5 * Vector2.up)).normalized, ForceMode2D.Impulse);
+          jumpCooler = true;
+        }
+      }
+      collider.enabled = true;
+    }
+    else if (jumpCooler)
+    {
+      jumpCooler = false;
     }
   }
 

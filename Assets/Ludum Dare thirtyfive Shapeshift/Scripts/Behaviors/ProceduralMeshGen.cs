@@ -9,7 +9,6 @@ public class ProceduralMeshGen : MonoBehaviour
 
   [TextAreaAttribute]
   public string vertex;
-
   private MeshFilter meshFilter;
   private PolygonCollider2D polygonCollider2D;
 
@@ -20,10 +19,15 @@ public class ProceduralMeshGen : MonoBehaviour
 
     List<Vector2> col = new List<Vector2>();
 
+    Vector3 sum = Vector3.zero;
     List<Vector3> verts = new List<Vector3>();
     List<int> tris = new List<int>();
 
     bool collider = true;
+    float minX = float.PositiveInfinity;
+    float maxX = float.NegativeInfinity;
+    float minY = float.PositiveInfinity;
+    float maxY = float.NegativeInfinity;
     foreach (string line in vertex.Split('\n'))
     {
       foreach (string vec in line.Split(','))
@@ -38,22 +42,60 @@ public class ProceduralMeshGen : MonoBehaviour
         {
           if (verts.Contains(v))
           {
-            Debug.Log("optimized out " + v);
             tris.Add(verts.IndexOf(v));
           }
           else
           {
+            if (v.x < minX)
+            {
+              minX = v.x;
+            }
+            if (v.y < minY)
+            {
+              minY = v.y;
+            }
+            if (v.x > maxX)
+            {
+              maxX = v.x;
+            }
+            if (v.y > maxY)
+            {
+              maxY = v.y;
+            }
             verts.Add(v);
+            sum += v;
             tris.Add(verts.Count - 1);
           }
         }
       }
       collider = false;
     }
+    sum /= verts.Count;
+
+    minX -= sum.x;
+    maxX -= sum.x;
+    minY -= sum.y;
+    maxY -= sum.y;
+
+    Vector2[] uvs = new Vector2[verts.Count];
+    for (int i = 0; i < verts.Count; ++i)
+    {
+      verts[i] -= sum;
+      uvs[i] = new Vector2(
+          (verts[i].x - minX) / (maxX - minX),
+          (verts[i].y - minY) / (maxY - minY)
+      );
+    }
+
+    for (int i = 0; i < col.Count; ++i)
+    {
+      col[i] -= (Vector2)sum;
+    }
 
     Mesh mesh = new Mesh();
     mesh.vertices = verts.ToArray();
     mesh.triangles = tris.ToArray();
+    mesh.uv = uvs;
     meshFilter.sharedMesh = mesh;
     polygonCollider2D.points = col.ToArray();
   }
