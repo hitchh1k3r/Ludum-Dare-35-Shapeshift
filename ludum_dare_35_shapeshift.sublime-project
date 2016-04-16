@@ -1,0 +1,22 @@
+{
+  "folders":
+  [
+    {
+      "path": "Assets/Ludum Dare thirtyfive Shapeshift/Scripts/Behaviors",
+      "file_exclude_patterns": ["*.meta"]
+    },
+    {
+      "path": "Assets/Ludum Dare thirtyfive Shapeshift/Scripts/Library",
+      "file_exclude_patterns": ["*.meta"]
+    },
+    {
+      "path": "Assets/Ludum Dare thirtyfive Shapeshift/Shaders",
+      "file_exclude_patterns": ["*.meta"]
+    },
+    {
+      "path": "Assets/Editor",
+      "file_exclude_patterns": ["*.meta"]
+    }
+  ],
+  "solution_file": "./ludum_dare_35_shapeshift.sln"
+}
