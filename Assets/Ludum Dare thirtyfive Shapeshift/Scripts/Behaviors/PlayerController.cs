@@ -2,15 +2,18 @@
 using System.Collections;
 using System.Collections.Generic;
 
+[SelectionBase]
 [RequireComponent(typeof(Rigidbody2D))]
-public class CharacterController : MonoBehaviour
+public class PlayerController : MonoBehaviour
 {
 
   public CharacterShape shape = CharacterShape.SQUARE;
-  public Collider2D collider;
+  new public Collider2D collider;
 
   public float extendSpeed = 5;
   public float retractSpeed = 15;
+
+  public float rotateSpeed = 80;
 
   public float horzExtend = 0;
   public float vertExtend = 0;
@@ -136,6 +139,64 @@ public class CharacterController : MonoBehaviour
 
     xDist -= horzExtend;
     yDist -= vertExtend;
+
+    // TODO (hitch) based on above check for BoxCollisions and reduce size!
+
+    collider.enabled = false;
+
+    RaycastHit2D up = Physics2D.BoxCast(transform.position, new Vector2(transform.localScale.x * 0.85f, 0.001f), 0, Vector2.up, 1.5f);
+    RaycastHit2D down = Physics2D.BoxCast(transform.position, new Vector2(transform.localScale.x * 0.85f, 0.001f), 0, Vector2.down, 1.5f);
+    if (up.collider != null && down.collider != null && up.collider.gameObject != down.collider.gameObject)
+    {
+      float vertSpace = down.distance + up.distance;
+      if ((1 + vertExtend) / (1 + horzExtend) > vertSpace)
+      {
+        xDist += horzExtend;
+        yDist += vertExtend;
+        float newVert = vertSpace * (1 + horzExtend) - 1;
+        float newHorz = horzExtend;
+        if (newVert < 0)
+        {
+          newVert = 0;
+
+          newHorz = (1 / vertSpace) - 1;
+        }
+
+        horzExtend = newHorz;
+        vertExtend = newVert;
+
+        xDist -= horzExtend;
+        yDist -= vertExtend;
+      }
+    }
+    RaycastHit2D left = Physics2D.BoxCast(transform.position, new Vector2(0.001f, transform.localScale.y * 0.85f), 0, Vector2.left, 1.5f);
+    RaycastHit2D right = Physics2D.BoxCast(transform.position, new Vector2(0.001f, transform.localScale.y * 0.85f), 0, Vector2.right, 1.5f);
+    if (left.collider != null && right.collider != null && left.collider.gameObject != right.collider.gameObject)
+    {
+      float horzSpace = left.distance + right.distance;
+      if ((1 + horzExtend) / (1 + vertExtend) > horzSpace)
+      {
+        xDist += vertExtend;
+        yDist += horzExtend;
+        float newHorz = horzSpace * (1 + vertExtend) - 1;
+        float newVert = vertExtend;
+        if (newHorz < 0)
+        {
+          newHorz = 0;
+
+          newVert = (1 / horzSpace) - 1;
+        }
+
+        vertExtend = newVert;
+        horzExtend = newHorz;
+
+        xDist -= vertExtend;
+        yDist -= horzExtend;
+      }
+    }
+
+    collider.enabled = true;
+
     transform.position = transform.position + new Vector3(0.75f * xDir * xDist, 0.75f * yDir * yDist, 0);
     transform.localScale = new Vector3((1 + horzExtend) / (1 + vertExtend), (1 + vertExtend) / (1 + horzExtend), 1);
   }
@@ -149,20 +210,20 @@ public class CharacterController : MonoBehaviour
     if (Input.GetAxisRaw("Horizontal") < -0.1)
     {
       float bonus = 1 + ((transform.rotation.eulerAngles.z % 120) / 120);
-      transform.Rotate(new Vector3(0, 0, Time.deltaTime * 45 * bonus * bonus));
-      transform.position = transform.position + new Vector3(-Time.deltaTime * bonus * bonus * 0.425f, 0, 0);
+      transform.Rotate(new Vector3(0, 0, Time.deltaTime * rotateSpeed * bonus * bonus));
+      transform.position = transform.position + new Vector3(-Time.deltaTime * bonus * bonus * rotateSpeed / 100, 0, 0);
       lastRotateDir = -1;
     }
     else if (Input.GetAxisRaw("Horizontal") > 0.1)
     {
       float bonus = 2 - ((transform.rotation.eulerAngles.z % 120) / 120);
-      transform.Rotate(new Vector3(0, 0, -Time.deltaTime * 45 * bonus * bonus));
-      transform.position = transform.position + new Vector3(Time.deltaTime * bonus * bonus * 0.425f, 0, 0);
+      transform.Rotate(new Vector3(0, 0, -Time.deltaTime * rotateSpeed * bonus * bonus));
+      transform.position = transform.position + new Vector3(Time.deltaTime * bonus * bonus * rotateSpeed / 100, 0, 0);
       lastRotateDir = 1;
     }
     else if (Input.GetAxisRaw("Vertical") < -0.1)
     {
-      transform.rotation = Quaternion.Euler(0, 0, 60);
+      transform.rotation = Quaternion.Euler(0, 0, 180);
     }
     else if (Input.GetAxisRaw("Vertical") > 0.1)
     {
@@ -185,8 +246,8 @@ public class CharacterController : MonoBehaviour
         float bonus = 2 - ((zAngle % 120) / 120);
         if (deltaAngle < 59)
         {
-          transform.position = transform.position + new Vector3(Time.deltaTime * bonus * bonus * 0.425f, 0, 0);
-          float amnt = Time.deltaTime * bonus * bonus * 45;
+          transform.position = transform.position + new Vector3(Time.deltaTime * bonus * bonus * rotateSpeed / 100, 0, 0);
+          float amnt = Time.deltaTime * bonus * bonus * rotateSpeed;
           if (amnt > deltaAngle)
           {
             amnt = deltaAngle;
@@ -195,8 +256,8 @@ public class CharacterController : MonoBehaviour
         }
         else
         {
-          transform.position = transform.position + new Vector3(-Time.deltaTime * bonus * bonus * 0.425f, 0, 0);
-          float amnt = Time.deltaTime * bonus * bonus * 45;
+          transform.position = transform.position + new Vector3(-Time.deltaTime * bonus * bonus * rotateSpeed / 100, 0, 0);
+          float amnt = Time.deltaTime * bonus * bonus * rotateSpeed;
           if (amnt > 60 - deltaAngle)
           {
             amnt = 60 - deltaAngle;
@@ -210,8 +271,8 @@ public class CharacterController : MonoBehaviour
         float bonus = 1 + ((zAngle % 120) / 120);
         if (deltaAngle > 1)
         {
-          transform.position = transform.position + new Vector3(-Time.deltaTime * 0.425f, 0, 0);
-          float amnt = Time.deltaTime * bonus * bonus * 45;
+          transform.position = transform.position + new Vector3(-Time.deltaTime * bonus * bonus * rotateSpeed / 100, 0, 0);
+          float amnt = Time.deltaTime * bonus * bonus * rotateSpeed;
           if (amnt > 60 - deltaAngle)
           {
             amnt = 60 - deltaAngle;
@@ -220,8 +281,8 @@ public class CharacterController : MonoBehaviour
         }
         else
         {
-          transform.position = transform.position + new Vector3(Time.deltaTime * 0.425f, 0, 0);
-          float amnt = Time.deltaTime * bonus * bonus * 45;
+          transform.position = transform.position + new Vector3(Time.deltaTime * bonus * bonus * rotateSpeed / 100, 0, 0);
+          float amnt = Time.deltaTime * bonus * bonus * rotateSpeed;
           if (amnt > deltaAngle)
           {
             amnt = deltaAngle;
@@ -248,11 +309,10 @@ public class CharacterController : MonoBehaviour
       collider.enabled = false;
       if (!jumpCooler)
       {
-        RaycastHit2D hit = Physics2D.CircleCast(transform.position, 0.45f, Vector2.down, 0.1f);
+        RaycastHit2D hit = Physics2D.CircleCast(transform.position, (0.5f * transform.localScale.x) - 0.05f, Vector2.down, 0.15f);
         if (!jumpCooler && hit.collider != null)
         {
-          Debug.Log("NORMAL: " + hit.normal + "   JUMP: " + (5 * (hit.normal + (5 * Vector2.up)).normalized));
-          physics.AddForce(5 * (hit.normal + (5 * Vector2.up)).normalized, ForceMode2D.Impulse);
+          physics.velocity = new Vector2(0, 5);
           jumpCooler = true;
         }
       }

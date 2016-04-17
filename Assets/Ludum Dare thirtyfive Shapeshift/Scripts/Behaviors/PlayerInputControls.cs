@@ -6,7 +6,10 @@ using System.Collections.Generic;
 public class PlayerInputControls : MonoBehaviour
 {
 
-  public List<CharacterController> characterControllers;
+  // Input joystick 1 and 2, or keyboard
+  public KeyCode splitJoin, triangleUp, triangleLeft, triangleRight, triangleDown, squareUp, squareLeft, squareRight, squareDown;
+
+  public List<PlayerController> characterControllers;
 
   private int characterControlled;
   new private Camera camera;
