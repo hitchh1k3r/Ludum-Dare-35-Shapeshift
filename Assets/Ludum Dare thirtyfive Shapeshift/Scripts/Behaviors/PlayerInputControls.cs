@@ -6,24 +6,55 @@ using System.Collections.Generic;
 public class PlayerInputControls : MonoBehaviour
 {
 
-  // Input joystick 1 and 2, or keyboard
-  // public KeyCode splitJoin, triangleUp, triangleLeft, triangleRight, triangleDown, squareUp, squareLeft, squareRight, squareDown;
-
   public MozaicManager currentWorld;
+  public Transform universe;
+
+  public List<Transform> objectsLinkedToWorld = new List<Transform>();
 
   public List<PlayerController> characterControllers;
   public static List<Transform> extraFocus = new List<Transform>();
   public static float lockScale;
   public static float levelStep = 0;
 
-  // private int characterControlled;
   new private Camera camera;
   private Coroutine shaker;
-  private Vector3 cameraWorldOffset;
 
   void Awake()
   {
     camera = GetComponent<Camera>();
+  }
+
+  void LateUpdate()
+  {
+    if (currentWorld.transform.rotation != Quaternion.identity)
+    {
+      // FIXME (hitch) this should rotate around the current worlds center of gravity!!!
+
+      Quaternion rot = currentWorld.transform.rotation;
+      Quaternion reverse = Quaternion.Inverse(rot);
+      Quaternion[] rotations = new Quaternion[objectsLinkedToWorld.Count];
+      int i = 0;
+      foreach (Transform o in objectsLinkedToWorld)
+      {
+        rotations[i] = o.rotation;
+        o.parent = currentWorld.transform;
+        // offsets[i] = rot * (o.position - currentWorld.transform.position);
+        ++i;
+      }
+      Vector2 camOffset = reverse * ((Vector2)camera.transform.position - currentWorld.phyics.centerOfMass);
+      universe.RotateAround(currentWorld.phyics.centerOfMass, Vector3.back, rot.eulerAngles.z);
+      currentWorld.transform.rotation = Quaternion.identity;
+      currentWorld.phyics.velocity = reverse * currentWorld.phyics.velocity;
+      camera.transform.position = (Vector3)(currentWorld.phyics.centerOfMass + camOffset) + new Vector3(0, 0, -10);
+      i = 0;
+      foreach (Transform o in objectsLinkedToWorld)
+      {
+        o.parent = null;
+        o.rotation = rotations[i];
+        // o.position = currentWorld.transform.position + offsets[i];
+        ++i;
+      }
+    }
   }
 
   void Update()
@@ -43,14 +74,7 @@ public class PlayerInputControls : MonoBehaviour
         RefManager.instance.triangle.gameObject.SetActive(false);
       }
     }
-    if (Input.GetButtonDown("Shapeshift"))
-    {
-      // characterControlled = (characterControlled + 1) % characterControllers.Count;
-    }
-    else
-    {
-      // characterControllers[characterControlled].ControlUpdate();
-    }
+
     Vector3 targetPos = Vector3.zero;
     float targetSize = 6;
 
@@ -78,6 +102,44 @@ public class PlayerInputControls : MonoBehaviour
         {
           minY = character.transform.position.y;
         }
+      }
+    }
+    if (RefManager.instance.squareEye.gameObject.activeInHierarchy)
+    {
+      if (RefManager.instance.squareEye.transform.position.x > maxX)
+      {
+        maxX = RefManager.instance.squareEye.transform.position.x;
+      }
+      if (RefManager.instance.squareEye.transform.position.x < minX)
+      {
+        minX = RefManager.instance.squareEye.transform.position.x;
+      }
+      if (RefManager.instance.squareEye.transform.position.y > maxY)
+      {
+        maxY = RefManager.instance.squareEye.transform.position.y;
+      }
+      if (RefManager.instance.squareEye.transform.position.y < minY)
+      {
+        minY = RefManager.instance.squareEye.transform.position.y;
+      }
+    }
+    if (RefManager.instance.triangleEye.gameObject.activeInHierarchy)
+    {
+      if (RefManager.instance.triangleEye.transform.position.x > maxX)
+      {
+        maxX = RefManager.instance.triangleEye.transform.position.x;
+      }
+      if (RefManager.instance.triangleEye.transform.position.x < minX)
+      {
+        minX = RefManager.instance.triangleEye.transform.position.x;
+      }
+      if (RefManager.instance.triangleEye.transform.position.y > maxY)
+      {
+        maxY = RefManager.instance.triangleEye.transform.position.y;
+      }
+      if (RefManager.instance.triangleEye.transform.position.y < minY)
+      {
+        minY = RefManager.instance.triangleEye.transform.position.y;
       }
     }
 
@@ -133,6 +195,32 @@ public class PlayerInputControls : MonoBehaviour
           }
         }
       }
+      if (RefManager.instance.squareEye.gameObject.activeInHierarchy)
+      {
+        float xDist = Mathf.Abs(targetPos.x - RefManager.instance.squareEye.transform.position.x) + 1.5f;
+        float yDist = Mathf.Abs(targetPos.y - RefManager.instance.squareEye.transform.position.y) + 1.5f;
+        if (xDist > maxX)
+        {
+          maxX = xDist;
+        }
+        if (yDist > maxY)
+        {
+          maxY = yDist;
+        }
+      }
+      if (RefManager.instance.triangleEye.gameObject.activeInHierarchy)
+      {
+        float xDist = Mathf.Abs(targetPos.x - RefManager.instance.triangleEye.transform.position.x) + 1.5f;
+        float yDist = Mathf.Abs(targetPos.y - RefManager.instance.triangleEye.transform.position.y) + 1.5f;
+        if (xDist > maxX)
+        {
+          maxX = xDist;
+        }
+        if (yDist > maxY)
+        {
+          maxY = yDist;
+        }
+      }
       foreach (Transform extraTransform in extraFocus)
       {
         float xDist = Mathf.Abs(targetPos.x - extraTransform.position.x) + 1.5f;
@@ -156,7 +244,6 @@ public class PlayerInputControls : MonoBehaviour
 
     camera.transform.position = new Vector3(pos.x, pos.y, -10);
     camera.orthographicSize = Mathf.Lerp(camera.orthographicSize, targetSize, Time.deltaTime * 10);
-    cameraWorldOffset = camera.transform.position - currentWorld.transform.position;
   }
 
   public void ScreenShake(float amount)
@@ -180,11 +267,6 @@ public class PlayerInputControls : MonoBehaviour
       camera.transform.position += amount * (Vector3)Random.insideUnitCircle;
       yield return null;
     }
-  }
-
-  public void ResetCameraOffset()
-  {
-    camera.transform.position = currentWorld.transform.position + cameraWorldOffset;
   }
 
 }

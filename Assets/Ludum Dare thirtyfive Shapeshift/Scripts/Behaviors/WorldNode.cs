@@ -6,7 +6,6 @@ using System.Collections.Generic;
 public class WorldNode : MonoBehaviour
 {
 
-  public Transform universe;
   public PlayerInputControls playerInputControls;
   public Transform[] visionAnchors;
 
@@ -27,10 +26,12 @@ public class WorldNode : MonoBehaviour
   {
     if (active)
     {
-      if (Input.GetButtonDown("Shapeshift"))
+      if (Input.GetButtonDown("Square_Shift") || Input.GetButtonDown("Triangle_Shift"))
       {
         active = false;
         mozaic.phyics.isKinematic = true;
+        mozaic.phyics.velocity = Vector2.zero;
+        mozaic.phyics.angularVelocity = 0;
         foreach (Transform r in visionAnchors)
         {
           PlayerInputControls.extraFocus.Remove(r);
@@ -39,16 +40,10 @@ public class WorldNode : MonoBehaviour
         circle.transform.position = transform.position;
         circle.gameObject.SetActive(true);
       }
-      if (mozaic.transform.rotation != Quaternion.identity)
-      {
-        universe.localRotation *= Quaternion.Inverse(mozaic.transform.rotation);
-        mozaic.transform.rotation = Quaternion.identity;
-        playerInputControls.ResetCameraOffset();
-      }
     }
     else
     {
-      if (Input.GetButtonDown("Shapeshift"))
+      if (Input.GetButtonDown("Square_Shift") || Input.GetButtonDown("Triangle_Shift"))
       {
         if (Physics2D.IsTouching(circle.collider, collider))
         {

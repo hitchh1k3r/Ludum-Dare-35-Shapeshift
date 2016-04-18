@@ -25,7 +25,7 @@ public class RoomNode : MonoBehaviour
     {
       if (!inProgress)
       {
-        if (Input.GetButtonDown("Shapeshift"))
+        if (Input.GetButtonDown("Square_Shift") || Input.GetButtonDown("Triangle_Shift"))
         {
           active = false;
           PlayerInputControls.lockScale = 0;
@@ -55,7 +55,7 @@ public class RoomNode : MonoBehaviour
     }
     else
     {
-      if (Input.GetButtonDown("Shapeshift"))
+      if (Input.GetButtonDown("Square_Shift") || Input.GetButtonDown("Triangle_Shift"))
       {
         if (Physics2D.IsTouching(circle.collider, collider))
         {
@@ -77,7 +77,7 @@ public class RoomNode : MonoBehaviour
     }
     if (deltaTheta != 0)
     {
-      yield return Tween.EaseCoroutine(room, Tween.TRANSPROP_ROTATION, Quaternion.Euler(0, 0, deltaTheta) * room.rotation, 0.5f, Tween.EASE_QUAD, Tween.EASE_QUAD);
+      yield return Tween.EaseCoroutine(room, Tween.TRANSPROP_ROTATION, Quaternion.Euler(0, 0, deltaTheta) * room.localRotation, 0.5f, Tween.EASE_QUAD, Tween.EASE_QUAD);
     }
     inProgress = false;
     yield break;

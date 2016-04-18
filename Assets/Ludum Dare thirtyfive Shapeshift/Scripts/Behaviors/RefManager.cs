@@ -7,11 +7,12 @@ public class RefManager : MonoBehaviour
 
   public static RefManager instance;
 
+  public PlayerInputControls inputController;
+
   public PlayerController circle;
   public PlayerController square;
   public PlayerController triangle;
 
-  public EyePickupController circleEye;
   public EyePickupController squareEye;
   public EyePickupController triangleEye;
 

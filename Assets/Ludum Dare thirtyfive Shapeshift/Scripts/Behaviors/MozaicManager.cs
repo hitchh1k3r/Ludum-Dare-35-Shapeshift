@@ -70,19 +70,46 @@ public class MozaicManager : MonoBehaviour
     return false;
   }
 
+  void Update()
+  {
+    bool newWorld = true;
+    foreach (PlayerController p in RefManager.instance.allCharacters)
+    {
+      if (p.gameObject.activeInHierarchy)
+      {
+        bool inWorld = false;
+        foreach (Collider2D c in GetComponents<Collider2D>())
+        {
+          if (c.OverlapPoint(p.transform.position))
+          {
+            if (p.transform.parent != transform)
+            {
+              p.transform.SetParent(transform);
+              p.transform.localRotation = Quaternion.identity;
+            }
+            inWorld = true;
+            break;
+          }
+        }
+        if (!inWorld)
+        {
+          newWorld = false;
+        }
+      }
+    }
+
+    if (newWorld)
+    {
+      RefManager.instance.inputController.currentWorld = this;
+    }
+  }
+
   public enum MoveDirection
   {
     UP,
     LEFT,
     RIGHT,
     DOWN
-  }
-
-  void OnCollisionEnter2D(Collision2D collision)
-  {
-    if (collision.gameObject == RefManager.instance.circle)
-    {
-    }
   }
 
 }

@@ -14,7 +14,6 @@ public class EyeController : MonoBehaviour
 
   void Update()
   {
-    transform.rotation = Quaternion.identity;
     if (rescaleInverse != null)
     {
       transform.localScale = new Vector3(1 / rescaleInverse.localScale.x, 1 / rescaleInverse.localScale.y, 1 / rescaleInverse.localScale.z);
@@ -40,11 +39,14 @@ public class EyeController : MonoBehaviour
       Vector3 minDir = 10 * Vector3.up;
       foreach (PlayerController character in RefManager.instance.allCharacters)
       {
-        Vector3 dir = (character.transform.position - transform.position);
-        dir.z = 0;
-        if (dir.sqrMagnitude > 1 && dir.sqrMagnitude < minDir.sqrMagnitude)
+        if (character.gameObject.activeInHierarchy)
         {
-          minDir = dir;
+          Vector3 dir = (character.transform.position - transform.position);
+          dir.z = 0;
+          if (dir.sqrMagnitude > 1 && dir.sqrMagnitude < minDir.sqrMagnitude)
+          {
+            minDir = dir;
+          }
         }
       }
       if (minDir.sqrMagnitude < 100)
