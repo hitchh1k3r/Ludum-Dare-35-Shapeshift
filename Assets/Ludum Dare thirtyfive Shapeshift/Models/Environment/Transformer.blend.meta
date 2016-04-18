@@ -1,19 +1,36 @@
 fileFormatVersion: 2
-guid: e431e278d82ea6b428b6145a68fb8f64
-timeCreated: 1460891248
+guid: 99780ec8001314bf09e67f27c987445c
+timeCreated: 1460960143
 licenseType: Free
 ModelImporter:
   serializedVersion: 19
   fileIDToRecycleName:
-    100000: default
-    100002: //RootNode
-    400000: default
-    400002: //RootNode
-    2300000: default
-    3300000: default
-    4300000: default
+    100000: //RootNode
+    100002: Transformer_Base
+    100004: Transformer_Blue
+    100006: Transformer_Green
+    100008: Transformer_Orange
+    400000: //RootNode
+    400002: Transformer_Base
+    400004: Transformer_Blue
+    400006: Transformer_Green
+    400008: Transformer_Orange
+    2300000: Transformer_Base
+    2300002: Transformer_Blue
+    2300004: Transformer_Green
+    2300006: Transformer_Orange
+    3300000: Transformer_Base
+    3300002: Transformer_Blue
+    3300004: Transformer_Green
+    3300006: Transformer_Orange
+    4300000: Transformer_Green
+    4300002: Transformer_Blue
+    4300004: Transformer_Base
+    4300006: Transformer_Orange
+    7400000: Default Take
+    9500000: //RootNode
   materials:
-    importMaterials: 0
+    importMaterials: 1
     materialName: 0
     materialSearch: 1
   animations:
@@ -39,7 +56,7 @@ ModelImporter:
     globalScale: 1
     meshCompression: 0
     addColliders: 0
-    importBlendShapes: 0
+    importBlendShapes: 1
     swapUVChannels: 0
     generateSecondaryUV: 0
     useFileUnits: 1
@@ -53,7 +70,7 @@ ModelImporter:
     useFileScale: 1
   tangentSpace:
     normalSmoothAngle: 60
-    normalImportMode: 1
+    normalImportMode: 0
     tangentImportMode: 3
   importAnimation: 0
   copyAvatar: 0
@@ -70,7 +87,7 @@ ModelImporter:
     rootMotionBoneName: 
     hasTranslationDoF: 0
   lastHumanDescriptionAvatarSource: {instanceID: 0}
-  animationType: 0
+  animationType: 2
   humanoidOversampling: 1
   additionalBone: 0
   userData: 

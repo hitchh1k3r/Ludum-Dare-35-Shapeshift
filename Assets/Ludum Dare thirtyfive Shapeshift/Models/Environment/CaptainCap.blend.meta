@@ -1,19 +1,26 @@
 fileFormatVersion: 2
-guid: cf8f4d120299e684baa074f6ede212d4
-timeCreated: 1460891237
+guid: 7f971a56f39e04c148da0f318de51671
+timeCreated: 1460963149
 licenseType: Free
 ModelImporter:
   serializedVersion: 19
   fileIDToRecycleName:
-    100000: default
-    100002: //RootNode
-    400000: default
-    400002: //RootNode
-    2300000: default
-    3300000: default
-    4300000: default
+    100000: Captain_Cap
+    100002: Captain_Cap_Tube
+    100004: //RootNode
+    400000: Captain_Cap
+    400002: Captain_Cap_Tube
+    400004: //RootNode
+    2300000: Captain_Cap
+    2300002: Captain_Cap_Tube
+    3300000: Captain_Cap
+    3300002: Captain_Cap_Tube
+    4300000: Captain_Cap_Tube
+    4300002: Captain_Cap
+    7400000: Default Take
+    9500000: //RootNode
   materials:
-    importMaterials: 0
+    importMaterials: 1
     materialName: 0
     materialSearch: 1
   animations:
@@ -39,7 +46,7 @@ ModelImporter:
     globalScale: 1
     meshCompression: 0
     addColliders: 0
-    importBlendShapes: 0
+    importBlendShapes: 1
     swapUVChannels: 0
     generateSecondaryUV: 0
     useFileUnits: 1
@@ -53,7 +60,7 @@ ModelImporter:
     useFileScale: 1
   tangentSpace:
     normalSmoothAngle: 60
-    normalImportMode: 1
+    normalImportMode: 0
     tangentImportMode: 3
   importAnimation: 0
   copyAvatar: 0
@@ -70,7 +77,7 @@ ModelImporter:
     rootMotionBoneName: 
     hasTranslationDoF: 0
   lastHumanDescriptionAvatarSource: {instanceID: 0}
-  animationType: 0
+  animationType: 2
   humanoidOversampling: 1
   additionalBone: 0
   userData: 

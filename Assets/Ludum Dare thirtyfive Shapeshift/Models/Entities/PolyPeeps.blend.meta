@@ -1,0 +1,180 @@
+fileFormatVersion: 2
+guid: 3741a51be45174eb190076068056088a
+timeCreated: 1460955611
+licenseType: Free
+ModelImporter:
+  serializedVersion: 19
+  fileIDToRecycleName:
+    100000: Circle
+    100002: Circle_Eye_Left
+    100004: Circle_Eye_Right
+    100006: Circle_Eyelid_Left
+    100008: Circle_Eyelid_Right
+    100010: Circle_Inner
+    100012: Circle_Iris_Left
+    100014: Circle_Iris_Right
+    100016: Circle_Mouth
+    100018: //RootNode
+    100020: Square
+    100022: Square_Border
+    100024: Square_Eye
+    100026: Square_Eyelid
+    100028: Square_Iris
+    100030: Square_Mouth
+    100032: Triangle
+    100034: Triangle_Eye
+    100036: Triangle_Eyelid
+    100038: Triangle_Inner
+    100040: Triangle_Iris
+    100042: Triangle_Mouth
+    400000: Circle
+    400002: Circle_Eye_Left
+    400004: Circle_Eye_Right
+    400006: Circle_Eyelid_Left
+    400008: Circle_Eyelid_Right
+    400010: Circle_Inner
+    400012: Circle_Iris_Left
+    400014: Circle_Iris_Right
+    400016: Circle_Mouth
+    400018: //RootNode
+    400020: Square
+    400022: Square_Border
+    400024: Square_Eye
+    400026: Square_Eyelid
+    400028: Square_Iris
+    400030: Square_Mouth
+    400032: Triangle
+    400034: Triangle_Eye
+    400036: Triangle_Eyelid
+    400038: Triangle_Inner
+    400040: Triangle_Iris
+    400042: Triangle_Mouth
+    2300000: Circle
+    2300002: Circle_Eye_Left
+    2300004: Circle_Eye_Right
+    2300006: Circle_Eyelid_Left
+    2300008: Circle_Eyelid_Right
+    2300010: Circle_Inner
+    2300012: Circle_Iris_Left
+    2300014: Circle_Iris_Right
+    2300016: Circle_Mouth
+    2300018: Square
+    2300020: Square_Border
+    2300022: Square_Eye
+    2300024: Square_Eyelid
+    2300026: Square_Iris
+    2300028: Square_Mouth
+    2300030: Triangle
+    2300032: Triangle_Eye
+    2300034: Triangle_Eyelid
+    2300036: Triangle_Inner
+    2300038: Triangle_Iris
+    2300040: Triangle_Mouth
+    3300000: Circle
+    3300002: Circle_Eye_Left
+    3300004: Circle_Eye_Right
+    3300006: Circle_Eyelid_Left
+    3300008: Circle_Eyelid_Right
+    3300010: Circle_Inner
+    3300012: Circle_Iris_Left
+    3300014: Circle_Iris_Right
+    3300016: Circle_Mouth
+    3300018: Square
+    3300020: Square_Border
+    3300022: Square_Eye
+    3300024: Square_Eyelid
+    3300026: Square_Iris
+    3300028: Square_Mouth
+    3300030: Triangle
+    3300032: Triangle_Eye
+    3300034: Triangle_Eyelid
+    3300036: Triangle_Inner
+    3300038: Triangle_Iris
+    3300040: Triangle_Mouth
+    4300000: Square_Eyelid
+    4300002: Triangle_Eyelid
+    4300004: Triangle_Inner
+    4300006: Square_Iris
+    4300008: Triangle
+    4300010: Triangle_Mouth
+    4300012: Triangle_Iris
+    4300014: Triangle_Eye
+    4300016: Square_Eye
+    4300018: Square_Mouth
+    4300020: Square_Border
+    4300022: Square
+    4300024: Circle
+    4300026: Circle_Eye_Left
+    4300028: Circle_Eye_Right
+    4300030: Circle_Eyelid_Left
+    4300032: Circle_Eyelid_Right
+    4300034: Circle_Inner
+    4300036: Circle_Iris_Left
+    4300038: Circle_Iris_Right
+    4300040: Circle_Mouth
+    7400000: Default Take
+    9500000: //RootNode
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleRotations: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+  importAnimation: 0
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

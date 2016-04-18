@@ -18,12 +18,20 @@ public class ProceduralMeshGen : MonoBehaviour
   private MeshFilter meshFilter;
   private PolygonCollider2D polygonCollider2D;
 
-  [ContextMenu("Rebuild Mesh")]
   void Awake()
   {
     meshFilter = GetComponent<MeshFilter>();
     polygonCollider2D = GetComponent<PolygonCollider2D>();
 
+    #if UNITY_EDITOR
+      allInstances.Add(this);
+    #endif
+
+    Rebuild();
+  }
+
+  void Rebuild()
+  {
     Vector3 sum = Vector3.zero;
     List<Vector3> verts = new List<Vector3>();
     List<Vector2> col = new List<Vector2>();
@@ -84,13 +92,28 @@ public class ProceduralMeshGen : MonoBehaviour
 
   #if UNITY_EDITOR
     private int lastColor;
+    private static List<ProceduralMeshGen> allInstances = new List<ProceduralMeshGen>();
 
     void Update()
     {
       if(lastColor != colorIndex)
       {
-        Awake();
+        Rebuild();
         lastColor = colorIndex;
+      }
+    }
+
+    void OnDestroy()
+    {
+      allInstances.Remove(this);
+    }
+
+    [ContextMenu("Rebuild All Meshes")]
+    void RebuildAllMeshes()
+    {
+      foreach(ProceduralMeshGen procGen in allInstances)
+      {
+        procGen.Rebuild();
       }
     }
   #endif
