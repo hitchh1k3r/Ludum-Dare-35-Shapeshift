@@ -7,6 +7,8 @@ public class RefManager : MonoBehaviour
 
   public static RefManager instance;
 
+  public Transform respawnLocation;
+
   public PlayerInputControls inputController;
 
   public PlayerController circle;

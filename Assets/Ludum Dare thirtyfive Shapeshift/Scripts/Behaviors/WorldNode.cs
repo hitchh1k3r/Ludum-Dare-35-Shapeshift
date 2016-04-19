@@ -26,8 +26,10 @@ public class WorldNode : MonoBehaviour
   {
     if (active)
     {
+      circle.transform.position = new Vector3(transform.position.x, transform.position.y, 0.15f);
       if (Input.GetButtonDown("Square_Shift") || Input.GetButtonDown("Triangle_Shift"))
       {
+        SoundPlayer.PlaySound(SoundPlayer.Sound.INTERACT, 0.5f);
         active = false;
         mozaic.phyics.isKinematic = true;
         mozaic.phyics.velocity = Vector2.zero;
@@ -37,23 +39,26 @@ public class WorldNode : MonoBehaviour
           PlayerInputControls.extraFocus.Remove(r);
         }
         PlayerInputControls.levelStep = 5;
-        circle.transform.position = transform.position;
-        circle.gameObject.SetActive(true);
+        circle.inNode = false;
       }
     }
     else
     {
       if (Input.GetButtonDown("Square_Shift") || Input.GetButtonDown("Triangle_Shift"))
       {
-        if (Physics2D.IsTouching(circle.collider, collider))
+        Debug.Log("TRYING");
+        if (collider.OverlapPoint(circle.transform.position)) // Physics2D.IsTouching(circle.collider, collider))
         {
+          Debug.Log("GOING");
+          RefManager.instance.respawnLocation = transform;
+          SoundPlayer.PlaySound(SoundPlayer.Sound.INTERACT, 0.5f);
           active = true;
           mozaic.phyics.isKinematic = false;
           Vector3 lockPos = new Vector3(mozaic.transform.position.x, mozaic.transform.position.y, (mozaic.height * 5) + 5);
           lockPos += new Vector3(mozaic.width * 5, mozaic.height * 5, 0);
           PlayerInputControls.extraFocus.AddRange(visionAnchors);
           PlayerInputControls.levelStep = 0;
-          circle.gameObject.SetActive(false);
+          circle.inNode = true;
         }
       }
     }
@@ -70,6 +75,7 @@ public class WorldNode : MonoBehaviour
         {
           change = 256;
         }
+        SoundPlayer.PlaySound(SoundPlayer.Sound.SMASH_SHIP, Mathf.Sqrt(change) / 16);
         playerInputControls.ScreenShake(Mathf.Sqrt(change) / 16);
       }
       lastVelocity = mozaic.phyics.velocity;

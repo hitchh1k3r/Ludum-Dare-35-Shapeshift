@@ -26,7 +26,7 @@ public class MozaicManager : MonoBehaviour
 
     foreach (Transform cell in cells)
     {
-      mozaic[(int)((cell.position.x - transform.position.x) / 10)][(int)((cell.position.y - transform.position.y) / 10)] = cell;
+      mozaic[(int)(cell.localPosition.x / 10)][(int)(cell.localPosition.y / 10)] = cell;
     }
   }
 
@@ -82,6 +82,7 @@ public class MozaicManager : MonoBehaviour
         {
           if (c.OverlapPoint(p.transform.position))
           {
+            p.spaceTimer = 0;
             if (p.transform.parent != transform)
             {
               p.transform.SetParent(transform);

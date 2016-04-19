@@ -15,9 +15,12 @@ public class PlayerInputControls : MonoBehaviour
   public static List<Transform> extraFocus = new List<Transform>();
   public static float lockScale;
   public static float levelStep = 0;
+  public static Vector3 lockPlace = Vector3.zero;
+  public static float moveSpeed = 1;
 
   new private Camera camera;
   private Coroutine shaker;
+  private bool respawning;
 
   void Awake()
   {
@@ -28,8 +31,6 @@ public class PlayerInputControls : MonoBehaviour
   {
     if (currentWorld.transform.rotation != Quaternion.identity)
     {
-      // FIXME (hitch) this should rotate around the current worlds center of gravity!!!
-
       Quaternion rot = currentWorld.transform.rotation;
       Quaternion reverse = Quaternion.Inverse(rot);
       Quaternion[] rotations = new Quaternion[objectsLinkedToWorld.Count];
@@ -38,7 +39,6 @@ public class PlayerInputControls : MonoBehaviour
       {
         rotations[i] = o.rotation;
         o.parent = currentWorld.transform;
-        // offsets[i] = rot * (o.position - currentWorld.transform.position);
         ++i;
       }
       Vector2 camOffset = reverse * ((Vector2)camera.transform.position - currentWorld.phyics.centerOfMass);
@@ -51,7 +51,6 @@ public class PlayerInputControls : MonoBehaviour
       {
         o.parent = null;
         o.rotation = rotations[i];
-        // o.position = currentWorld.transform.position + offsets[i];
         ++i;
       }
     }
@@ -59,20 +58,19 @@ public class PlayerInputControls : MonoBehaviour
 
   void Update()
   {
-    if (Input.GetKeyDown(KeyCode.Escape))
+    bool alive = false;
+    foreach (PlayerController character in characterControllers)
     {
-      if (RefManager.instance.circle.gameObject.activeSelf)
+      if (character.gameObject.activeInHierarchy)
       {
-        RefManager.instance.circle.gameObject.SetActive(false);
-        RefManager.instance.square.gameObject.SetActive(true);
-        RefManager.instance.triangle.gameObject.SetActive(true);
+        alive = true;
+        break;
       }
-      else
-      {
-        RefManager.instance.circle.gameObject.SetActive(true);
-        RefManager.instance.square.gameObject.SetActive(false);
-        RefManager.instance.triangle.gameObject.SetActive(false);
-      }
+    }
+    if (!alive && !respawning)
+    {
+      respawning = true;
+      StartCoroutine(Respawn());
     }
 
     Vector3 targetPos = Vector3.zero;
@@ -104,7 +102,7 @@ public class PlayerInputControls : MonoBehaviour
         }
       }
     }
-    if (RefManager.instance.squareEye.gameObject.activeInHierarchy)
+    if (RefManager.instance.squareEye.gameObject.activeInHierarchy && !RefManager.instance.squareEye.noCamera)
     {
       if (RefManager.instance.squareEye.transform.position.x > maxX)
       {
@@ -123,7 +121,7 @@ public class PlayerInputControls : MonoBehaviour
         minY = RefManager.instance.squareEye.transform.position.y;
       }
     }
-    if (RefManager.instance.triangleEye.gameObject.activeInHierarchy)
+    if (RefManager.instance.triangleEye.gameObject.activeInHierarchy && !RefManager.instance.triangleEye.noCamera)
     {
       if (RefManager.instance.triangleEye.transform.position.x > maxX)
       {
@@ -166,9 +164,22 @@ public class PlayerInputControls : MonoBehaviour
     targetPos = new Vector2((minX + maxX) / 2, (minY + maxY) / 2);
 
     // FIXME (hitch) make this somehow link to current world offset!
+    // for now it'll just have arbitrary height jumps... whoops no time to fix ^_^
     if (levelStep > 0)
     {
       targetPos.y = Mathf.Round((targetPos.y + 2.5f) / levelStep) * levelStep;
+    }
+
+    if (lockPlace != Vector3.zero)
+    {
+      targetPos = lockPlace;
+    }
+
+    float fact = Time.deltaTime * ((camera.transform.position - targetPos).sqrMagnitude / 30);
+    Vector3 pos = Vector2.Lerp(camera.transform.position, targetPos, moveSpeed * moveSpeed * fact);
+    if (float.IsNaN(pos.x) || float.IsNaN(pos.y))
+    {
+      pos = RefManager.instance.respawnLocation.position;
     }
 
     if (lockScale > 0)
@@ -183,8 +194,8 @@ public class PlayerInputControls : MonoBehaviour
       {
         if (character.gameObject.activeInHierarchy)
         {
-          float xDist = Mathf.Abs(targetPos.x - character.transform.position.x) + 1.5f;
-          float yDist = Mathf.Abs(targetPos.y - character.transform.position.y) + 1.5f;
+          float xDist = Mathf.Abs(pos.x - character.transform.position.x) + 1.5f;
+          float yDist = Mathf.Abs(pos.y - character.transform.position.y) + 1.5f;
           if (xDist > maxX)
           {
             maxX = xDist;
@@ -195,10 +206,10 @@ public class PlayerInputControls : MonoBehaviour
           }
         }
       }
-      if (RefManager.instance.squareEye.gameObject.activeInHierarchy)
+      if (RefManager.instance.squareEye.gameObject.activeInHierarchy && !RefManager.instance.squareEye.noCamera)
       {
-        float xDist = Mathf.Abs(targetPos.x - RefManager.instance.squareEye.transform.position.x) + 1.5f;
-        float yDist = Mathf.Abs(targetPos.y - RefManager.instance.squareEye.transform.position.y) + 1.5f;
+        float xDist = Mathf.Abs(pos.x - RefManager.instance.squareEye.transform.position.x) + 1.5f;
+        float yDist = Mathf.Abs(pos.y - RefManager.instance.squareEye.transform.position.y) + 1.5f;
         if (xDist > maxX)
         {
           maxX = xDist;
@@ -208,10 +219,10 @@ public class PlayerInputControls : MonoBehaviour
           maxY = yDist;
         }
       }
-      if (RefManager.instance.triangleEye.gameObject.activeInHierarchy)
+      if (RefManager.instance.triangleEye.gameObject.activeInHierarchy && !RefManager.instance.triangleEye.noCamera)
       {
-        float xDist = Mathf.Abs(targetPos.x - RefManager.instance.triangleEye.transform.position.x) + 1.5f;
-        float yDist = Mathf.Abs(targetPos.y - RefManager.instance.triangleEye.transform.position.y) + 1.5f;
+        float xDist = Mathf.Abs(pos.x - RefManager.instance.triangleEye.transform.position.x) + 1.5f;
+        float yDist = Mathf.Abs(pos.y - RefManager.instance.triangleEye.transform.position.y) + 1.5f;
         if (xDist > maxX)
         {
           maxX = xDist;
@@ -223,8 +234,8 @@ public class PlayerInputControls : MonoBehaviour
       }
       foreach (Transform extraTransform in extraFocus)
       {
-        float xDist = Mathf.Abs(targetPos.x - extraTransform.position.x) + 1.5f;
-        float yDist = Mathf.Abs(targetPos.y - extraTransform.position.y) + 1.5f;
+        float xDist = Mathf.Abs(pos.x - extraTransform.position.x) + 1.5f;
+        float yDist = Mathf.Abs(pos.y - extraTransform.position.y) + 1.5f;
         if (xDist > maxX)
         {
           maxX = xDist;
@@ -239,11 +250,8 @@ public class PlayerInputControls : MonoBehaviour
       targetSize = Mathf.Max(6, maxY, maxX * aspect);
     }
 
-    float fact = Time.deltaTime * ((camera.transform.position - targetPos).sqrMagnitude / 30);
-    Vector3 pos = Vector2.Lerp(camera.transform.position, targetPos, fact);
-
     camera.transform.position = new Vector3(pos.x, pos.y, -10);
-    camera.orthographicSize = Mathf.Lerp(camera.orthographicSize, targetSize, Time.deltaTime * 10);
+    camera.orthographicSize = Mathf.Lerp(camera.orthographicSize, targetSize, moveSpeed * Time.deltaTime * 10);
   }
 
   public void ScreenShake(float amount)
@@ -257,6 +265,36 @@ public class PlayerInputControls : MonoBehaviour
       }
       shaker = StartCoroutine(DoShake(amount));
     }
+  }
+
+  private IEnumerator Respawn()
+  {
+    RefManager.instance.squareEye.noCamera = false;
+    RefManager.instance.triangleEye.noCamera = false;
+    Vector3 pos = RefManager.instance.squareEye.transform.position;
+    pos.z = -5;
+    RefManager.instance.squareEye.transform.position = pos;
+    pos = RefManager.instance.triangleEye.transform.position;
+    pos.z = -5;
+    RefManager.instance.triangleEye.transform.position = pos;
+    Vector3 resp = RefManager.instance.respawnLocation.position;
+    resp.z = -5;
+    StartCoroutine(Tween.EaseCoroutine(RefManager.instance.squareEye.transform, Tween.TRANSPROP_ROTATION, Quaternion.identity, 3, Tween.EASE_QUAD, Tween.EASE_QUAD));
+    StartCoroutine(Tween.EaseCoroutine(RefManager.instance.triangleEye.transform, Tween.TRANSPROP_ROTATION, Quaternion.identity, 3, Tween.EASE_QUAD, Tween.EASE_QUAD));
+    StartCoroutine(Tween.EaseCoroutine(RefManager.instance.squareEye.transform, Tween.TRANSPROP_POSITION, resp + 0.4f * Vector3.right, 3, Tween.EASE_QUAD, Tween.EASE_QUAD));
+    StartCoroutine(Tween.EaseCoroutine(RefManager.instance.triangleEye.transform, Tween.TRANSPROP_POSITION, resp + 0.4f * Vector3.left + 0.1f * Vector3.down, 3, Tween.EASE_QUAD, Tween.EASE_QUAD));
+    yield return new WaitForSeconds(3);
+    Vector3 spawn = RefManager.instance.respawnLocation.position;
+    spawn.z = 0.15f;
+    RefManager.instance.circle.transform.position = spawn;
+    RefManager.instance.squareEye.gameObject.SetActive(false);
+    RefManager.instance.triangleEye.gameObject.SetActive(false);
+    RefManager.instance.circle.transform.localScale = 0.25f * Vector3.one;
+    RefManager.instance.circle.gameObject.SetActive(true);
+    RefManager.instance.circle.StartCoroutine(Tween.EaseCoroutine(RefManager.instance.circle.transform, Tween.TRANSPROP_SCALE, Vector3.one, 0.75f, Tween.EASE_NONE, Tween.EASE_ELASTIC));
+    respawning = false;
+    SoundPlayer.PlaySound(SoundPlayer.Sound.COMBINE, 1);
+    yield break;
   }
 
   private IEnumerator DoShake(float amount)

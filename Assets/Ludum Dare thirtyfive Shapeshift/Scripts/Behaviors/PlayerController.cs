@@ -23,10 +23,10 @@ public class PlayerController : MonoBehaviour
   public Rigidbody2D physics;
 
   [System.NonSerialized]
-  public bool inNode;
+  public float spaceTimer;
 
-  // [System.NonSerialized]
-  // public Vector2 localGravity = Vector2.down;
+  [System.NonSerialized]
+  public bool inNode;
 
   private int lastRotateDir = 0;
   private bool jumpCooler;
@@ -34,6 +34,8 @@ public class PlayerController : MonoBehaviour
   private bool lastShaking;
   private float shakeTimer;
   private bool noGravity;
+  private float jumpChanger;
+  private float wallTimer;
 
   void Awake()
   {
@@ -42,48 +44,127 @@ public class PlayerController : MonoBehaviour
 
   void FixedUpdate()
   {
-    if (!noGravity)
+    if (!inNode)
     {
-      physics.AddForce(-9.85f * transform.up);
-    }
-  }
-
-  void Update()
-  {
-    if (shape == CharacterShape.SQUARE)
-    {
-      SquareUpdate();
-    }
-    else if (shape == CharacterShape.TRIANGLE)
-    {
-      TriangleUpdate();
-    }
-    else if (shape == CharacterShape.CIRCLE)
-    {
-      CircleUpdate();
-    }
-    if (shaking)
-    {
-      shakeTimer += Time.deltaTime;
-      lastShaking = true;
-      foreach (EyeController eye in eyes)
+      if (!noGravity)
       {
-        eye.transform.localPosition = (shakeTimer + 0.5f) * 0.15f * Random.insideUnitCircle;
+        physics.AddForce(-9.85f * transform.up);
       }
     }
-    else if (lastShaking)
+  }
+ 
+  void Update()
+  {
+    if (!inNode)
     {
-      shakeTimer = 0;
-      lastShaking = false;
-      foreach (EyeController eye in eyes)
+      if (transform.position.z != 0.15f)
       {
-        eye.transform.localPosition = Vector3.zero;
+        transform.position = new Vector3(transform.position.x, transform.position.y, 0.15f);
+      }
+      if (shape == CharacterShape.SQUARE)
+      {
+        SquareUpdate();
+      }
+      else if (shape == CharacterShape.TRIANGLE)
+      {
+        TriangleUpdate();
+      }
+      else if (shape == CharacterShape.CIRCLE)
+      {
+        CircleUpdate();
+      }
+      spaceTimer += Time.deltaTime;
+      if (spaceTimer > 1)
+      {
+        shaking = true;
+        shakeTimer -= Time.deltaTime / 2;
+        if (shakeTimer > 2f)
+        {
+          KillShape();
+        }
+      }
+      if (shaking)
+      {
+        shakeTimer += Time.deltaTime;
+        lastShaking = true;
+        foreach (EyeController eye in eyes)
+        {
+          eye.transform.localPosition = (shakeTimer + 0.5f) * 0.15f * Random.insideUnitCircle;
+        }
+      }
+      else if (lastShaking)
+      {
+        shakeTimer = 0;
+        lastShaking = false;
+        foreach (EyeController eye in eyes)
+        {
+          eye.transform.localPosition = Vector3.zero;
+        }
       }
     }
     foreach (EyeController eye in eyes)
     {
       eye.transform.rotation = Quaternion.LookRotation(Vector3.forward, transform.up);
     }
+
+    foreach (PlayerController p in RefManager.instance.allCharacters)
+    {
+      p.collider.enabled = false;
+    }
+    if (Physics2D.OverlapPoint(transform.position, ~(1 << 8)) != null)
+    {
+      if (wallTimer > 0.25f)
+      {
+        KillShape();
+      }
+      wallTimer += Time.deltaTime;
+    }
+    else
+    {
+      wallTimer = 0;
+    }
+    foreach (PlayerController p in RefManager.instance.allCharacters)
+    {
+      p.collider.enabled = true;
+    }
+  }
+
+  public void KillShape()
+  {
+    SoundPlayer.PlaySound(SoundPlayer.Sound.DEATH, 1);
+    Vector3 pos = transform.position;
+    pos.z = 0.15f;
+    if (shape == CharacterShape.CIRCLE || shape == CharacterShape.SQUARE)
+    {
+      RefManager.instance.squareEye.transform.position = pos;
+      RefManager.instance.squareEye.gameObject.SetActive(true);
+      horzExtend = 0;
+      vertExtend = 0;
+      if (spaceTimer > 1)
+      {
+        RefManager.instance.squareEye.noCamera = true;
+      }
+      else
+      {
+        RefManager.instance.squareEye.noCamera = false;
+      }
+    }
+    if (shape == CharacterShape.CIRCLE || shape == CharacterShape.TRIANGLE)
+    {
+      RefManager.instance.triangleEye.transform.position = pos;
+      RefManager.instance.triangleEye.gameObject.SetActive(true);
+      collider.transform.rotation = Quaternion.identity;
+      lastRotateDir = 0;
+      if (spaceTimer > 1)
+      {
+        RefManager.instance.triangleEye.noCamera = true;
+      }
+      else
+      {
+        RefManager.instance.triangleEye.noCamera = false;
+      }
+    }
+    gameObject.SetActive(false);
   }
 
   private void SquareUpdate()
@@ -98,11 +179,7 @@ public class PlayerController : MonoBehaviour
       shaking = true;
       if (shakeTimer > 1.5f)
       {
-        RefManager.instance.squareEye.transform.position = transform.position;
-        gameObject.SetActive(false);
-        RefManager.instance.squareEye.gameObject.SetActive(true);
-        horzExtend = 0;
-        vertExtend = 0;
+        KillShape();
         return;
       }
     }
@@ -275,11 +352,7 @@ public class PlayerController : MonoBehaviour
       shaking = true;
       if (shakeTimer > 1.5f)
       {
-        RefManager.instance.triangleEye.transform.position = transform.position;
-        gameObject.SetActive(false);
-        RefManager.instance.triangleEye.gameObject.SetActive(true);
-        transform.rotation = Quaternion.identity;
-        lastRotateDir = 0;
+        KillShape();
         return;
       }
     }
@@ -295,20 +368,14 @@ public class PlayerController : MonoBehaviour
     {
       float bonus = 1 + ((collider.transform.rotation.eulerAngles.z % 120) / 120);
       collider.transform.Rotate(new Vector3(0, 0, Time.deltaTime * rotateSpeed * bonus * bonus));
-      if (groundContact)
-      {
-        transform.position = transform.position + (transform.rotation * new Vector3(-Time.deltaTime * bonus * bonus * rotateSpeed / 100, 0, 0));
-      }
+      transform.position = transform.position + (transform.rotation * ((groundContact ? 1 : 0.1f) * new Vector3(-Time.deltaTime * bonus * bonus * rotateSpeed / 100, 0, 0)));
       lastRotateDir = -1;
     }
     else if (Input.GetAxisRaw("Triangle_Horizontal") > 0.1)
     {
       float bonus = 2 - ((collider.transform.rotation.eulerAngles.z % 120) / 120);
       collider.transform.Rotate(new Vector3(0, 0, -Time.deltaTime * rotateSpeed * bonus * bonus));
-      if (groundContact)
-      {
-        transform.position = transform.position + (transform.rotation * new Vector3(Time.deltaTime * bonus * bonus * rotateSpeed / 100, 0, 0));
-      }
+      transform.position = transform.position + (transform.rotation * ((groundContact ? 1 : 0.1f) * new Vector3(Time.deltaTime * bonus * bonus * rotateSpeed / 100, 0, 0)));
       lastRotateDir = 1;
     }
     else
@@ -324,10 +391,7 @@ public class PlayerController : MonoBehaviour
         float bonus = 2 - ((zAngle % 120) / 120);
         if (deltaAngle < 59)
         {
-          if (groundContact)
-          {
-            transform.position = transform.position + (transform.rotation * new Vector3(Time.deltaTime * bonus * bonus * rotateSpeed / 100, 0, 0));
-          }
+          transform.position = transform.position + (transform.rotation * ((groundContact ? 1 : 0.1f) * new Vector3(Time.deltaTime * bonus * bonus * rotateSpeed / 100, 0, 0)));
           float amnt = Time.deltaTime * bonus * bonus * rotateSpeed;
           if (amnt > deltaAngle)
           {
@@ -337,10 +401,7 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-          if (groundContact)
-          {
-            transform.position = transform.position + (transform.rotation * new Vector3(-Time.deltaTime * bonus * bonus * rotateSpeed / 100, 0, 0));
-          }
+          transform.position = transform.position + (transform.rotation * ((groundContact ? 1 : 0.1f) * new Vector3(-Time.deltaTime * bonus * bonus * rotateSpeed / 100, 0, 0)));
           float amnt = Time.deltaTime * bonus * bonus * rotateSpeed;
           if (amnt > 60 - deltaAngle)
           {
@@ -355,10 +416,7 @@ public class PlayerController : MonoBehaviour
         float bonus = 1 + ((zAngle % 120) / 120);
         if (deltaAngle > 1)
         {
-          if (groundContact)
-          {
-            transform.position = transform.position + (transform.rotation * new Vector3(-Time.deltaTime * bonus * bonus * rotateSpeed / 100, 0, 0));
-          }
+          transform.position = transform.position + (transform.rotation * ((groundContact ? 1 : 0.1f) * new Vector3(-Time.deltaTime * bonus * bonus * rotateSpeed / 100, 0, 0)));
           float amnt = Time.deltaTime * bonus * bonus * rotateSpeed;
           if (amnt > 60 - deltaAngle)
           {
@@ -368,10 +426,7 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-          if (groundContact)
-          {
-            transform.position = transform.position + (transform.rotation * new Vector3(Time.deltaTime * bonus * bonus * rotateSpeed / 100, 0, 0));
-          }
+          transform.position = transform.position + (transform.rotation * ((groundContact ? 1 : 0.1f) * new Vector3(Time.deltaTime * bonus * bonus * rotateSpeed / 100, 0, 0)));
           float amnt = Time.deltaTime * bonus * bonus * rotateSpeed;
           if (amnt > deltaAngle)
           {
@@ -394,6 +449,7 @@ public class PlayerController : MonoBehaviour
       shaking = true;
       if (shakeTimer > 0.75f)
       {
+        SoundPlayer.PlaySound(SoundPlayer.Sound.SPLIT, 1);
         shaking = false;
         RefManager.instance.triangle.transform.position = transform.position;
         RefManager.instance.square.transform.position = transform.position;
@@ -417,6 +473,7 @@ public class PlayerController : MonoBehaviour
           RaycastHit2D hit = Physics2D.CircleCast(transform.position, (0.8175f * transform.localScale.x) - 0.2f, -transform.up, 0.3f, ~(1 << 8));
           if (!jumpCooler && hit.collider != null && Vector2.Dot(hit.normal, transform.up) > 0.1)
           {
+            SoundPlayer.PlaySound(SoundPlayer.Sound.JUMP_SMALL, 1);
             physics.velocity = -5 * -transform.up;
             jumpCooler = true;
           }
@@ -429,18 +486,52 @@ public class PlayerController : MonoBehaviour
         {
           collider.enabled = false;
           RaycastHit2D hit = Physics2D.CircleCast(transform.position, (0.8175f * transform.localScale.x) - 0.2f, -transform.up, 0.3f, ~(1 << 8));
-          if (!jumpCooler && hit.collider != null && Vector2.Dot(hit.normal, transform.up) > 0.1)
+          if (hit.collider != null && Vector2.Dot(hit.normal, transform.up) > 0.1)
           {
-            physics.velocity = -10 * -transform.up;
-            jumpCooler = true;
+            jumpChanger += Time.deltaTime;
+            if (jumpChanger > 2)
+            {
+              jumpChanger = 2;
+            }
+          }
+          else
+          {
+            if (jumpChanger > 0.25f)
+            {
+              SoundPlayer.PlaySound(SoundPlayer.Sound.JUMP_BIG, 1);
+              physics.velocity = ((3 * jumpChanger) + 4) * transform.up;
+              jumpCooler = true;
+              jumpChanger = 0;
+            }
           }
           collider.enabled = true;
         }
+      }
+      else if (jumpChanger > 0.25f)
+      {
+        collider.enabled = false;
+        RaycastHit2D hit = Physics2D.CircleCast(transform.position, (0.8175f * transform.localScale.x) - 0.2f, -transform.up, 0.3f, ~(1 << 8));
+        if (hit.collider != null && Vector2.Dot(hit.normal, transform.up) > 0.1)
+        {
+          SoundPlayer.PlaySound(SoundPlayer.Sound.JUMP_BIG, 1);
+          physics.velocity = ((3 * jumpChanger) + 4) * transform.up;
+          jumpCooler = true;
+        }
+        collider.enabled = true;
+        jumpChanger = 0;
       }
       else if (jumpCooler)
       {
         jumpCooler = false;
       }
+    }
+    if (jumpChanger > 0)
+    {
+      transform.localScale = new Vector3(1, 1 - (jumpChanger * 0.25f), 1);
+    }
+    else
+    {
+      transform.localScale = Vector3.one;
     }
   }
 
